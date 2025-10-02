@@ -14,6 +14,7 @@ from phases.phase1_simple import Phase1Game
 from phases.phase2_graphics import Phase2Game
 from phases.phase3_gpr import Phase3Game
 from phases.phase4_advanced import Phase4Game
+from phases.phase5_physics import Phase5Game
 
 def main():
     """Main entry point for the rover game"""
@@ -23,7 +24,7 @@ def main():
     print("2. Phase 2: Realistic Graphics")
     print("3. Phase 3: GPR Integration")
     print("4. Phase 4: Advanced Features")
-    print("5. Phase 5: Advanced Physics (Coming Soon)")
+    print("5. Phase 5: Keep-Out Zones")
 
     choice = input("\nSelect phase (1-5) or press Enter for Phase 3: ").strip()
 
@@ -81,9 +82,17 @@ def main():
             print("Make sure you have pygame and numpy installed")
 
     elif choice == "5":
-        print("Phase 5: Advanced Physics")
-        print("PyBullet physics integration is planned for this phase.")
-        print("This will add realistic rover suspension and terrain physics!")
+        print("Starting Phase 5...")
+        print("Keep-Out Zones: Rover cannot enter hazard areas!")
+        print("Controls: WASD to move, left-click to mark dig sites, P to excavate, K to toggle zones")
+        print("Red zones show where rover cannot go. Watch for collision warnings!")
+
+        try:
+            game = Phase5Game()
+            game.run()
+        except Exception as e:
+            print(f"Error running game: {e}")
+            print("Make sure you have pygame and numpy installed")
 
     else:
         print("Invalid selection. Please choose 1-5.")

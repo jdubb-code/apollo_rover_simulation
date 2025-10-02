@@ -469,13 +469,28 @@ class Phase3Game:
         self.large_font = pygame.font.Font(None, 48)
 
     def generate_hazards(self):
-        """Generate random hazards across the terrain"""
+        """Generate random hazards across the terrain, avoiding rover spawn"""
         hazards = []
-        for _ in range(12):
+        rover_spawn_x = self.width // 2
+        rover_spawn_y = self.height // 2
+        min_distance_from_spawn = 150  # Keep hazards at least 150 pixels from spawn
+
+        attempts = 0
+        max_attempts = 100  # Prevent infinite loop
+
+        while len(hazards) < 12 and attempts < max_attempts:
             x = random.randint(100, self.width - 100)
             y = random.randint(100, self.height - 100)
-            hazard_type = random.choice(["rock", "crevasse", "slope"])
-            hazards.append(Hazard(x, y, hazard_type))
+
+            # Check distance from rover spawn point
+            distance_from_spawn = math.sqrt((x - rover_spawn_x)**2 + (y - rover_spawn_y)**2)
+
+            if distance_from_spawn >= min_distance_from_spawn:
+                hazard_type = random.choice(["rock", "crevasse", "slope"])
+                hazards.append(Hazard(x, y, hazard_type))
+
+            attempts += 1
+
         return hazards
 
     def generate_artifacts(self):
@@ -502,7 +517,7 @@ class Phase3Game:
         return artifacts
 
     def reset_game(self):
-        """Reset the game state to initial conditions"""
+        """Reset the game state to initial conditions with new hazard and artifact positions"""
         # Store initial rover position
         initial_x = self.width // 2
         initial_y = self.height // 2
@@ -518,27 +533,18 @@ class Phase3Game:
         self.dig_sites = []
         self.next_site_id = 1
 
-        # Reset all artifacts
-        for artifact in self.artifacts:
-            artifact.discovered = False
-            artifact.confidence = 0.0
-            artifact.scan_count = 0
-            artifact.id = None
-            artifact.discovery_time = None
-            # Recalculate max confidence (has randomness component)
-            artifact.max_confidence = artifact.calculate_max_confidence()
+        # Regenerate hazards and artifacts with new positions
+        self.hazards = self.generate_hazards()
+        self.artifacts = self.generate_artifacts()
 
         # Reset GPR system
         self.gpr_system.scan_data = np.zeros((50, 30))
         self.gpr_system.scan_line_pos = 0
         self.gpr_system.scan_direction = 1
 
-        # Reset hazard detection status
-        for hazard in self.hazards:
-            hazard.detected = False
-
         # Reset artifact catalog
         self.artifact_catalog.discovered_artifacts = []
+        self.artifact_catalog.next_id = 1
 
     def handle_events(self):
         """Handle pygame events"""

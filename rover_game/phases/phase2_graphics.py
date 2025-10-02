@@ -211,6 +211,9 @@ class Hazard:
             self.height = random.randint(30, 60)
             self.color = (100, 85, 70)
 
+        # Calculate radius for circular collision detection (used in Phase 5)
+        self.radius = max(self.width, self.height) // 2
+
     def get_rect(self):
         """Get collision rectangle"""
         return pygame.Rect(self.x - self.width//2, self.y - self.height//2,
@@ -310,13 +313,28 @@ class Phase2Game:
         self.large_font = pygame.font.Font(None, 48)
 
     def generate_hazards(self):
-        """Generate random hazards across the terrain"""
+        """Generate random hazards across the terrain, avoiding rover spawn"""
         hazards = []
-        for _ in range(15):
+        rover_spawn_x = self.width // 2
+        rover_spawn_y = self.height // 2
+        min_distance_from_spawn = 150  # Keep hazards at least 150 pixels from spawn
+
+        attempts = 0
+        max_attempts = 100  # Prevent infinite loop
+
+        while len(hazards) < 15 and attempts < max_attempts:
             x = random.randint(100, self.width - 100)
             y = random.randint(100, self.height - 100)
-            hazard_type = random.choice(["rock", "crevasse", "slope"])
-            hazards.append(Hazard(x, y, hazard_type))
+
+            # Check distance from rover spawn point
+            distance_from_spawn = math.sqrt((x - rover_spawn_x)**2 + (y - rover_spawn_y)**2)
+
+            if distance_from_spawn >= min_distance_from_spawn:
+                hazard_type = random.choice(["rock", "crevasse", "slope"])
+                hazards.append(Hazard(x, y, hazard_type))
+
+            attempts += 1
+
         return hazards
 
     def handle_events(self):
