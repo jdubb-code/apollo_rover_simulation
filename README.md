@@ -4,17 +4,68 @@ A multi-phase video game demonstrating an archaeological rover's capabilities fo
 
 ## Quick Start
 
-1. **Install dependencies:**
+### Automated Setup (Recommended)
+
+**macOS/Linux:**
+```bash
+./setup.sh
+```
+
+**Windows:**
+```cmd
+setup.bat
+```
+
+The installer will:
+- Check for Python 3.8+
+- Create a virtual environment
+- Install all dependencies
+- Provide instructions to run the game
+
+### Manual Setup
+
+If the automated installer doesn't work:
+
+1. **Install Python 3.8 or later:**
+   - macOS: `brew install python3` or download from [python.org](https://www.python.org/downloads/)
+   - Windows: Download from [python.org](https://www.python.org/downloads/) (check "Add Python to PATH")
+   - Linux: `sudo apt install python3 python3-venv python3-pip`
+
+2. **Create virtual environment:**
    ```bash
+   # macOS/Linux
    python3 -m venv rover_env
    source rover_env/bin/activate
+
+   # Windows
+   python -m venv rover_env
+   rover_env\Scripts\activate
+   ```
+
+3. **Install dependencies:**
+   ```bash
    pip install -r requirements.txt
    ```
 
-2. **Run the game:**
+4. **Run the game:**
    ```bash
    python main.py
    ```
+
+### Troubleshooting
+
+**"python3: command not found" (macOS/Linux)**
+- Install Python 3: `brew install python3` or from [python.org](https://www.python.org/downloads/)
+
+**"python is not recognized" (Windows)**
+- Reinstall Python and check "Add Python to PATH" during installation
+
+**"No module named 'pygame'"**
+- Make sure virtual environment is activated: `source rover_env/bin/activate` (macOS/Linux) or `rover_env\Scripts\activate` (Windows)
+- Reinstall dependencies: `pip install -r requirements.txt`
+
+**Permission denied: ./setup.sh**
+- Make script executable: `chmod +x setup.sh`
 
 ## Game Phases
 
