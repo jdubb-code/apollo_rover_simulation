@@ -95,20 +95,37 @@ If the automated installer doesn't work:
 - Scientific signal strength indicators and confidence tracking
 - Enhanced 1400x900 display for GPR visualization
 
-### Phase 4: Advanced Features (🚧 In Development)
+### Phase 4: Advanced Features (✅ Complete)
 - Dig tool: Click on marked dig sites to excavate and view artifact images
-- Enhanced hazard system requiring specialized attachments for cleanup
-- Robot hub for depositing artifacts, soil samples, and swapping attachments
+- Proximity-based excavation system with notification log
 - Variable confidence levels based on artifact depth/size and scan proximity
 - Scrollable artifact catalog for better organization
 - Full-map clicking capability (no restricted UI areas)
 - Reset functionality for map and artifact state
 
-### Phase 5: Advanced Physics (🚧 Coming Soon)
-- PyBullet physics engine integration
-- Realistic 6-wheel rover suspension
-- Authentic terrain interaction
-- Advanced environmental challenges
+### Phase 5: Keep-Out Zones (✅ Complete)
+- Physics-based collision detection system
+- Hazard keep-out zones preventing rover entry
+- Visual indicators for restricted areas (red zones)
+- Collision warning system with feedback
+- Boundary sliding mechanics for smooth navigation
+- Toggle visualization of keep-out zones (K key)
+
+### Phase 6: Realistic Hazards & Camera System (✅ Complete)
+- **Camera System**: Rover stays centered on screen while exploring a larger 3000x2400 world
+- **Realistic hazard graphics** with 5 types: rocks, boulders, trees, water, and ponds
+- Type-specific visual representations:
+  - Rocks and boulders: Irregular shapes with texture and lighting effects
+  - Trees: Brown trunks with green foliage layers
+  - Bodies of water: Animated ripples and reflections
+- Enhanced environmental diversity with 25-35 hazards and 30-40 artifacts
+- Smooth camera following that keeps rover centered during exploration
+- **Debugging controls** for artifact discovery:
+  - Press N to show/hide artifact count in status panel
+  - Press H to show all artifact locations (gray X marks)
+  - Gold circles indicate discovered artifacts
+  - Use GPR (G key) to scan and discover artifacts, then excavate nearby
+- All Phase 5 features (keep-out zones, collision detection) with improved graphics
 
 ## Project Structure
 
@@ -143,8 +160,10 @@ apollo_2026_ip_v2/
 1. Enhance graphics for Phase 2 ✅
 2. Add hazard detection system ✅
 3. Implement GPR interface for Phase 3 ✅
-4. Implement advanced features for Phase 4
-5. Integrate PyBullet physics for Phase 5
+4. Implement advanced features for Phase 4 ✅
+5. Implement keep-out zones for Phase 5 ✅
+6. Add realistic hazard graphics for Phase 6 ✅
+7. Future enhancements (TBD)
 
 ## Development
 Built with Python, Pygame, and designed for future integration with PyBullet, matplotlib, and numpy for advanced scientific visualization.

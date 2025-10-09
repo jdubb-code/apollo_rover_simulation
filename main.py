@@ -15,6 +15,8 @@ from phases.phase2_graphics import Phase2Game
 from phases.phase3_gpr import Phase3Game
 from phases.phase4_advanced import Phase4Game
 from phases.phase5_physics import Phase5Game
+from phases.phase6_extended import Phase6Game
+from phases.phase7_exploration import Phase7Game
 
 def main():
     """Main entry point for the rover game"""
@@ -25,8 +27,10 @@ def main():
     print("3. Phase 3: GPR Integration")
     print("4. Phase 4: Advanced Features")
     print("5. Phase 5: Keep-Out Zones")
+    print("6. Phase 6: Extended Features")
+    print("7. Phase 7: Exploration Mode")
 
-    choice = input("\nSelect phase (1-5) or press Enter for Phase 3: ").strip()
+    choice = input("\nSelect phase (1-7) or press Enter for Phase 3: ").strip()
 
     if choice == "1":
         print("Starting Phase 1...")
@@ -94,8 +98,41 @@ def main():
             print(f"Error running game: {e}")
             print("Make sure you have pygame and numpy installed")
 
+    elif choice == "6":
+        print("Starting Phase 6...")
+        print("Realistic Hazards with Camera System & Autopilot!")
+        print("Explore a 3000x2400 world - camera follows the rover keeping it centered!")
+        print("Navigate around rocks, boulders, trees, and bodies of water with animated effects!")
+        print("Controls: WASD to move, R to return to base (autopilot), G to use GPR, P to excavate")
+        print("Autopilot calculates path avoiding keep-out zones!")
+        print("Battery drains during movement and recharges at base (5 seconds)")
+        print("Debugging: Press N to show artifact count, H to see all artifact locations")
+
+        try:
+            game = Phase6Game()
+            game.run()
+        except Exception as e:
+            print(f"Error running game: {e}")
+            print("Make sure you have pygame and numpy installed")
+
+    elif choice == "7":
+        print("Starting Phase 7...")
+        print("Exploration Mode: Discover Hidden Hazards!")
+        print("Hazards are invisible until you explore and discover them!")
+        print("Navigate carefully - undiscovered hazards can still block your path!")
+        print("Controls: WASD to move, R to return to base, G to use GPR, P to excavate")
+        print("Press E to toggle exploration stats showing discovery progress")
+        print("Battery system with auto-recharge at base included!")
+
+        try:
+            game = Phase7Game()
+            game.run()
+        except Exception as e:
+            print(f"Error running game: {e}")
+            print("Make sure you have pygame and numpy installed")
+
     else:
-        print("Invalid selection. Please choose 1-5.")
+        print("Invalid selection. Please choose 1-7.")
 
 if __name__ == "__main__":
     main()
