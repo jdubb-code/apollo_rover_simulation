@@ -342,10 +342,10 @@ class Phase8Game(Phase7Game):
     def draw_controls(self):
         """Enhanced controls showing grid navigation features"""
         panel_x = 20
-        panel_y = self.height - 220  # Taller panel for more controls
+        panel_y = self.height - 290  # Even taller panel for all controls
 
         # Panel background
-        panel_rect = pygame.Rect(panel_x, panel_y, 260, 210)
+        panel_rect = pygame.Rect(panel_x, panel_y, 280, 280)
         pygame.draw.rect(self.screen, (30, 30, 40), panel_rect, border_radius=8)
         pygame.draw.rect(self.screen, (150, 150, 180), panel_rect, 3, border_radius=8)
 
@@ -354,26 +354,77 @@ class Phase8Game(Phase7Game):
         title = font.render("CONTROLS", True, (255, 255, 255))
         self.screen.blit(title, (panel_x + 10, panel_y + 8))
 
-        # Control list
-        small_font = pygame.font.Font(None, 18)
-        controls = [
+        # Control list organized by category
+        small_font = pygame.font.Font(None, 17)
+        header_font = pygame.font.Font(None, 19)
+
+        y_offset = 33
+
+        # Movement section
+        header = header_font.render("Movement:", True, (150, 200, 255))
+        self.screen.blit(header, (panel_x + 10, panel_y + y_offset))
+        y_offset += 18
+
+        movement_controls = [
             "WASD: Move Rover",
-            "G: Toggle GPR",
-            "P: Excavate",
-            "R: Return to Base",
-            "K: Toggle Keep-Out Zones",
-            "V: Grid Navigation (Horiz)",
-            "B: Grid Navigation (Vert)",
+            "R: Return to Base (Auto)"
+        ]
+        for control in movement_controls:
+            text = small_font.render(control, True, (200, 200, 200))
+            self.screen.blit(text, (panel_x + 15, panel_y + y_offset))
+            y_offset += 16
+
+        y_offset += 4
+
+        # Grid Navigation section
+        header = header_font.render("Grid Navigation:", True, (0, 255, 200))
+        self.screen.blit(header, (panel_x + 10, panel_y + y_offset))
+        y_offset += 18
+
+        grid_controls = [
+            "V: Start Horizontal Sweep",
+            "B: Start Vertical Sweep",
             "X: Stop Grid Navigation",
-            "M: Toggle Grid Display",
+            "M: Toggle Grid Display"
+        ]
+        for control in grid_controls:
+            text = small_font.render(control, True, (200, 200, 200))
+            self.screen.blit(text, (panel_x + 15, panel_y + y_offset))
+            y_offset += 16
+
+        y_offset += 4
+
+        # Exploration section
+        header = header_font.render("Exploration:", True, (255, 200, 100))
+        self.screen.blit(header, (panel_x + 10, panel_y + y_offset))
+        y_offset += 18
+
+        explore_controls = [
+            "G: Toggle GPR",
+            "P: Excavate Artifact",
+            "K: Toggle Keep-Out Zones",
             "E: Toggle Exploration Stats"
         ]
-
-        y_offset = 35
-        for control in controls:
+        for control in explore_controls:
             text = small_font.render(control, True, (200, 200, 200))
-            self.screen.blit(text, (panel_x + 10, panel_y + y_offset))
-            y_offset += 18
+            self.screen.blit(text, (panel_x + 15, panel_y + y_offset))
+            y_offset += 16
+
+        y_offset += 4
+
+        # Debugging section
+        header = header_font.render("Debugging:", True, (255, 100, 100))
+        self.screen.blit(header, (panel_x + 10, panel_y + y_offset))
+        y_offset += 18
+
+        debug_controls = [
+            "N: Show Artifact Count",
+            "H: Show All Artifacts"
+        ]
+        for control in debug_controls:
+            text = small_font.render(control, True, (200, 200, 200))
+            self.screen.blit(text, (panel_x + 15, panel_y + y_offset))
+            y_offset += 16
 
     def draw_status_panel(self):
         """Enhanced status panel with grid navigation status"""
