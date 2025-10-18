@@ -17,6 +17,7 @@ from phases.phase4_advanced import Phase4Game
 from phases.phase5_physics import Phase5Game
 from phases.phase6_extended import Phase6Game
 from phases.phase7_exploration import Phase7Game
+from phases.phase8_grid import Phase8Game
 
 def main():
     """Main entry point for the rover game"""
@@ -29,8 +30,9 @@ def main():
     print("5. Phase 5: Keep-Out Zones")
     print("6. Phase 6: Extended Features")
     print("7. Phase 7: Exploration Mode")
+    print("8. Phase 8: Grid Navigation")
 
-    choice = input("\nSelect phase (1-7) or press Enter for Phase 3: ").strip()
+    choice = input("\nSelect phase (1-8) or press Enter for Phase 3: ").strip()
 
     if choice == "1":
         print("Starting Phase 1...")
@@ -131,8 +133,32 @@ def main():
             print(f"Error running game: {e}")
             print("Make sure you have pygame and numpy installed")
 
+    elif choice == "8":
+        print("Starting Phase 8...")
+        print("Grid Navigation: Autonomous Survey Mode!")
+        print("Visual grid overlay divides the map into sections")
+        print("World is now bounded - rover cannot drive infinitely!")
+        print("Autonomous grid-following with obstacle avoidance")
+        print("")
+        print("Controls:")
+        print("  V: Start horizontal grid navigation")
+        print("  B: Start vertical grid navigation")
+        print("  X: Stop grid navigation")
+        print("  M: Toggle grid display")
+        print("  All Phase 7 controls (WASD, R, G, P, E, etc.)")
+        print("")
+        print("The rover will autonomously follow a lawn-mower pattern,")
+        print("automatically avoiding obstacles and resuming the grid path!")
+
+        try:
+            game = Phase8Game()
+            game.run()
+        except Exception as e:
+            print(f"Error running game: {e}")
+            print("Make sure you have pygame and numpy installed")
+
     else:
-        print("Invalid selection. Please choose 1-7.")
+        print("Invalid selection. Please choose 1-8.")
 
 if __name__ == "__main__":
     main()

@@ -120,12 +120,46 @@ If the automated installer doesn't work:
   - Bodies of water: Animated ripples and reflections
 - Enhanced environmental diversity with 25-35 hazards and 30-40 artifacts
 - Smooth camera following that keeps rover centered during exploration
+- **Battery system**: 60-second capacity that drains during movement
+- **Auto-recharge at base**: Battery recharges over 5 seconds when at base
+- **Return-to-base autopilot**: Press R to automatically navigate back to base
+- Pathfinding that avoids keep-out zones
 - **Debugging controls** for artifact discovery:
   - Press N to show/hide artifact count in status panel
   - Press H to show all artifact locations (gray X marks)
   - Gold circles indicate discovered artifacts
   - Use GPR (G key) to scan and discover artifacts, then excavate nearby
 - All Phase 5 features (keep-out zones, collision detection) with improved graphics
+
+### Phase 7: Exploration Mode (✅ Complete)
+- **Hidden hazards**: Hazards are invisible until discovered
+- **Discovery system**: Rover must get within 150 pixels to reveal hazards
+- **Exploration statistics**: Track discovery progress (X/Y hazards found)
+- Keep-out zones only apply to discovered hazards
+- Collision detection works with both discovered and undiscovered hazards
+- Press E to toggle exploration stats panel
+- All Phase 6 features inherited (battery, autopilot, camera system)
+
+### Phase 8: Grid Navigation (✅ Complete)
+- **Visual grid overlay**: 100x100 pixel grid dividing the map into sections
+- **World boundaries**: Map is now bounded - rover cannot drive infinitely
+- Rover constrained within dig site boundaries (50 pixel buffer from edges)
+- **Autonomous grid navigation**: Lawn-mower pattern surveying
+  - Press V for horizontal sweeping pattern
+  - Press B for vertical sweeping pattern
+  - Press X to stop autonomous navigation
+- **Intelligent obstacle avoidance**: When obstacle blocks grid path:
+  - Rover automatically finds detour around obstacle
+  - Returns to grid path after clearing obstacle
+  - Shows detour waypoints in orange
+- **Visual feedback**:
+  - Current target waypoint in green
+  - Completed waypoints in gray
+  - Upcoming waypoints in cyan
+  - Red boundary lines marking world edges
+- Press M to toggle grid display
+- Grid navigation status panel showing progress
+- All Phase 7 features inherited
 
 ## Project Structure
 
@@ -163,7 +197,9 @@ apollo_2026_ip_v2/
 4. Implement advanced features for Phase 4 ✅
 5. Implement keep-out zones for Phase 5 ✅
 6. Add realistic hazard graphics for Phase 6 ✅
-7. Future enhancements (TBD)
+7. Add exploration mode for Phase 7 ✅
+8. Add grid navigation for Phase 8 ✅
+9. Future enhancements (TBD)
 
 ## Development
 Built with Python, Pygame, and designed for future integration with PyBullet, matplotlib, and numpy for advanced scientific visualization.
