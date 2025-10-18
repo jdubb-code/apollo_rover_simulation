@@ -18,11 +18,6 @@ class Phase8Game(Phase7Game):
 
         pygame.display.set_caption("Archaeological Rover - Phase 8: Grid Navigation")
 
-        # In Phase 8, all hazards are visible from the start (no exploration mechanic)
-        for hazard in self.hazards:
-            if hasattr(hazard, 'discovered'):
-                hazard.discovered = True  # Make all exploration hazards visible
-
         # Grid settings
         self.grid_size = 100  # Grid cell size in pixels
         self.show_grid = True
@@ -347,15 +342,6 @@ class Phase8Game(Phase7Game):
 
         # Draw Phase 8 custom bottom UI over Phase 6's UI
         self.draw_phase8_ui()
-
-    def draw_keepout_zones_camera(self):
-        """Draw keep-out zones for ALL hazards in Phase 8 (override Phase 7's discovery-based version)"""
-        if self.show_keepout_zones:
-            for hazard in self.hazards:
-                # In Phase 8, show all keep-out zones regardless of discovery
-                keepout_radius = hazard.radius + self.rover.collision_radius
-                screen_pos = self.camera.apply(hazard.x, hazard.y)
-                pygame.draw.circle(self.screen, (255, 0, 0), screen_pos, keepout_radius, 2)
 
     def draw_phase8_ui(self):
         """Draw Phase 8 bottom UI panel with title and controls"""
