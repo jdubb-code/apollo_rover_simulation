@@ -342,10 +342,10 @@ class Phase8Game(Phase7Game):
     def draw_controls(self):
         """Enhanced controls showing grid navigation features"""
         panel_x = 20
-        panel_y = self.height - 290  # Even taller panel for all controls
+        panel_y = self.height - 240  # Panel sized for controls
 
         # Panel background
-        panel_rect = pygame.Rect(panel_x, panel_y, 280, 280)
+        panel_rect = pygame.Rect(panel_x, panel_y, 280, 230)
         pygame.draw.rect(self.screen, (30, 30, 40), panel_rect, border_radius=8)
         pygame.draw.rect(self.screen, (150, 150, 180), panel_rect, 3, border_radius=8)
 
@@ -410,21 +410,6 @@ class Phase8Game(Phase7Game):
             self.screen.blit(text, (panel_x + 15, panel_y + y_offset))
             y_offset += 16
 
-        y_offset += 4
-
-        # Debugging section
-        header = header_font.render("Debugging:", True, (255, 100, 100))
-        self.screen.blit(header, (panel_x + 10, panel_y + y_offset))
-        y_offset += 18
-
-        debug_controls = [
-            "N: Show Artifact Count",
-            "H: Show All Artifacts"
-        ]
-        for control in debug_controls:
-            text = small_font.render(control, True, (200, 200, 200))
-            self.screen.blit(text, (panel_x + 15, panel_y + y_offset))
-            y_offset += 16
 
     def draw_status_panel(self):
         """Enhanced status panel with grid navigation status"""
