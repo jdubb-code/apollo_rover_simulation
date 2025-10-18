@@ -18,6 +18,11 @@ class Phase8Game(Phase7Game):
 
         pygame.display.set_caption("Archaeological Rover - Phase 8: Grid Navigation")
 
+        # In Phase 8, all hazards are visible from the start (no exploration mechanic)
+        for hazard in self.hazards:
+            if hasattr(hazard, 'discovered'):
+                hazard.discovered = True  # Make all exploration hazards visible
+
         # Grid settings
         self.grid_size = 100  # Grid cell size in pixels
         self.show_grid = True
@@ -310,32 +315,72 @@ class Phase8Game(Phase7Game):
 
     def draw(self):
         """Enhanced drawing with Phase 8 features"""
-        # Call Phase 7's draw but skip Phase 6's bottom UI by calling grandparent methods
-        # We'll draw our own UI
+        # Call parent (Phase 7) draw to get everything rendered
+        # We'll just draw over the bottom UI portion
+        from .phase6_extended import Phase6Game
 
-        # Draw everything from parents except the bottom UI panel
-        # Call Phase5Game's draw to get all the world rendering
-        from .phase5_physics import Phase5Game
-        Phase5Game.draw(self)
+        # Clear screen
+        self.screen.fill((101, 86, 71))  # Base terrain color
 
-        # Draw Phase 6/7 specific elements
-        # Draw selected artifact coordinates
-        if hasattr(self, 'draw_selected_artifact_coords'):
-            self.draw_selected_artifact_coords()
+        # Draw terrain patterns/textures across visible area
+        import random
+        random.seed(42)  # Consistent terrain
+        camera_left = int(self.camera.x)
+        camera_top = int(self.camera.y)
+        camera_right = int(self.camera.x + self.width)
+        camera_bottom = int(self.camera.y + self.height)
 
-        # Draw excavation progress
-        if hasattr(self, 'draw_excavation_progress'):
-            self.draw_excavation_progress()
+        # Draw terrain rocks/patterns only in visible area
+        for world_x in range(camera_left - 100, camera_right + 100, 50):
+            for world_y in range(camera_top - 100, camera_bottom + 100, 50):
+                random.seed(world_x * 1000 + world_y)
+                for _ in range(3):
+                    offset_x = random.randint(0, 50)
+                    offset_y = random.randint(0, 50)
+                    size = random.randint(1, 3)
+                    color = (random.randint(80, 120), random.randint(70, 100), random.randint(60, 90))
+                    screen_pos = self.camera.apply(world_x + offset_x, world_y + offset_y)
+                    if 0 <= screen_pos[0] < self.width and 0 <= screen_pos[1] < self.height:
+                        pygame.draw.circle(self.screen, color, screen_pos, size)
+        random.seed()
 
-        # Draw artifact display
-        if hasattr(self, 'draw_artifact_display'):
-            self.draw_artifact_display()
+        # Draw keep-out zones
+        self.draw_keepout_zones_camera()
 
-        # Draw battery indicator
-        if hasattr(self, 'draw_battery_indicator'):
-            self.draw_battery_indicator()
+        # Draw base
+        if hasattr(self, 'draw_base_camera'):
+            self.draw_base_camera()
 
-        # Draw grid overlay after terrain but before UI
+        # Draw artifacts
+        if hasattr(self, 'draw_artifacts_camera'):
+            self.draw_artifacts_camera()
+
+        # Draw dig sites
+        for site in self.dig_sites:
+            if hasattr(self, 'draw_dig_site_camera'):
+                self.draw_dig_site_camera(site)
+
+        # Draw hazards
+        for hazard in self.hazards:
+            if hasattr(self, 'draw_hazard_camera'):
+                self.draw_hazard_camera(hazard)
+
+        # Draw rover trail
+        if hasattr(self, 'draw_rover_trail_camera'):
+            self.draw_rover_trail_camera()
+
+        # Draw autopilot path
+        if self.autopilot_active and hasattr(self, 'autopilot_path'):
+            for i, (wx, wy) in enumerate(self.autopilot_path):
+                screen_pos = self.camera.apply(wx, wy)
+                if 0 <= screen_pos[0] <= self.width and 0 <= screen_pos[1] <= self.height:
+                    pygame.draw.circle(self.screen, (0, 255, 255), screen_pos, 4)
+
+        # Draw rover
+        if hasattr(self, 'draw_rover_camera'):
+            self.draw_rover_camera()
+
+        # Draw grid overlay
         self.draw_grid()
 
         # Draw grid waypoints if active
@@ -343,26 +388,53 @@ class Phase8Game(Phase7Game):
             for i, (wx, wy) in enumerate(self.grid_waypoints):
                 screen_pos = self.camera.apply(wx, wy)
                 if 0 <= screen_pos[0] <= self.width and 0 <= screen_pos[1] <= self.height:
-                    # Draw waypoint marker
                     if i == self.grid_waypoint_index:
-                        # Current target in green
                         pygame.draw.circle(self.screen, (0, 255, 0), screen_pos, 6)
                     elif i < self.grid_waypoint_index:
-                        # Completed in gray
                         pygame.draw.circle(self.screen, (100, 100, 100), screen_pos, 3)
                     else:
-                        # Upcoming in cyan
                         pygame.draw.circle(self.screen, (0, 200, 200), screen_pos, 4)
 
-        # Draw detour waypoints if avoiding obstacles
+        # Draw detour waypoints
         if self.avoiding_obstacle and self.avoidance_waypoints:
             for (wx, wy) in self.avoidance_waypoints:
                 screen_pos = self.camera.apply(wx, wy)
                 if 0 <= screen_pos[0] <= self.width and 0 <= screen_pos[1] <= self.height:
-                    pygame.draw.circle(self.screen, (255, 165, 0), screen_pos, 8, 2)  # Orange circles
+                    pygame.draw.circle(self.screen, (255, 165, 0), screen_pos, 8, 2)
 
-        # Draw Phase 8 custom UI (replaces Phase 6's bottom panel)
+        # Draw fixed UI elements
+        if hasattr(self, 'draw_status_panel'):
+            self.draw_status_panel()
+
+        if hasattr(self, 'draw_gpr_display'):
+            self.draw_gpr_display()
+
+        if hasattr(self, 'draw_artifact_catalog'):
+            self.draw_artifact_catalog()
+
+        if hasattr(self, 'draw_selected_artifact_coords'):
+            self.draw_selected_artifact_coords()
+
+        if hasattr(self, 'draw_excavation_progress'):
+            self.draw_excavation_progress()
+
+        if hasattr(self, 'draw_artifact_display'):
+            self.draw_artifact_display()
+
+        if hasattr(self, 'draw_battery_indicator'):
+            self.draw_battery_indicator()
+
+        # Draw Phase 8 custom bottom UI (instead of Phase 6's)
         self.draw_phase8_ui()
+
+    def draw_keepout_zones_camera(self):
+        """Draw keep-out zones for ALL hazards in Phase 8 (override Phase 7's discovery-based version)"""
+        if self.show_keepout_zones:
+            for hazard in self.hazards:
+                # In Phase 8, show all keep-out zones regardless of discovery
+                keepout_radius = hazard.radius + self.rover.collision_radius
+                screen_pos = self.camera.apply(hazard.x, hazard.y)
+                pygame.draw.circle(self.screen, (255, 0, 0), screen_pos, keepout_radius, 2)
 
     def draw_phase8_ui(self):
         """Draw Phase 8 bottom UI panel with title and controls"""
