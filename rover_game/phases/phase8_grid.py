@@ -440,7 +440,12 @@ class Phase8Game(Phase7Game):
 
     def handle_keydown(self, event):
         """Handle keyboard input with Phase 8 specific controls"""
-        # Call parent keydown handler
+        # Block debugging keys (N and H) - don't pass to parent
+        if event.key == pygame.K_n or event.key == pygame.K_h:
+            # Debugging keys disabled in Phase 8
+            return
+
+        # Call parent keydown handler for other keys
         super().handle_keydown(event)
 
         # Grid navigation controls
