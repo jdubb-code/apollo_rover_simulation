@@ -291,9 +291,19 @@ class Phase6Game(Phase5Game):
         self.autopilot_path = []
         self.autopilot_waypoint_index = 0
 
+        # Collision detection for autopilot
+        self.autopilot_stuck_counter = 0
+        self.autopilot_last_position = None
+        self.autopilot_backing_up = False
+        self.backup_distance = 0
+
+        # GPR scanning during autopilot
+        self.autopilot_gpr_enabled = False  # Whether GPR was manually enabled before autopilot
+        self.autopilot_scan_at_waypoints = True  # Scan at each waypoint during autopilot
+
         # Battery system
-        self.battery_capacity = 60.0  # 60 seconds = 1 minute
-        self.battery_level = 60.0  # Start full
+        self.battery_capacity = 240.0  # 240 seconds = 4 minutes (4x original)
+        self.battery_level = 240.0  # Start full
         self.battery_depleted = False
         self.is_recharging = False
         self.recharge_timer = 0.0
@@ -499,6 +509,13 @@ class Phase6Game(Phase5Game):
         if self.autopilot_path:
             self.autopilot_active = True
             self.autopilot_waypoint_index = 0
+
+            # Enable GPR for scanning during autopilot
+            self.autopilot_gpr_enabled = self.gpr_system.active  # Save current state
+            if not self.gpr_system.active:
+                self.gpr_system.active = True
+                print("GPR enabled for waypoint scanning")
+
             print(f"Autopilot engaged! Following {len(self.autopilot_path)} waypoints to base.")
         else:
             print("Could not find path to base!")
@@ -508,6 +525,16 @@ class Phase6Game(Phase5Game):
         self.autopilot_active = False
         self.autopilot_path = []
         self.autopilot_waypoint_index = 0
+
+        # Reset collision detection variables
+        self.autopilot_stuck_counter = 0
+        self.autopilot_last_position = None
+        self.autopilot_backing_up = False
+        self.backup_distance = 0
+
+        # Restore GPR state if it wasn't manually enabled
+        if not self.autopilot_gpr_enabled:
+            self.gpr_system.active = False
 
         # If battery was depleted during return to base, now stop the rover
         if self.battery_level <= 0:
@@ -540,8 +567,8 @@ class Phase6Game(Phase5Game):
                 waypoints.append((target_x, target_y))
                 break
 
-            # Try direct path
-            step_distance = min(200, distance)
+            # Try direct path (increased step distance for fewer waypoints)
+            step_distance = min(300, distance)
             next_x = current_x + (dx / distance) * step_distance
             next_y = current_y + (dy / distance) * step_distance
 
@@ -563,6 +590,11 @@ class Phase6Game(Phase5Game):
                     if self.is_path_clear(current_x, current_y, test_x, test_y):
                         # Score based on distance to target
                         score = math.sqrt((test_x - target_x)**2 + (test_y - target_y)**2)
+
+                        # Prefer explored areas - give 30% better score if near rover's trail
+                        if self.is_area_explored(test_x, test_y, radius=50):
+                            score *= 0.7  # Boost score (lower is better)
+
                         if score < best_score:
                             best_score = score
                             best_waypoint = (test_x, test_y)
@@ -592,12 +624,25 @@ class Phase6Game(Phase5Game):
 
             # Check against all hazard keep-out zones
             for hazard in self.hazards:
-                keepout_radius = hazard.radius + self.rover.collision_radius + 10  # Add buffer
+                keepout_radius = hazard.radius + self.rover.collision_radius + 5  # Reduced buffer for tighter paths
                 dist = math.sqrt((check_x - hazard.x)**2 + (check_y - hazard.y)**2)
                 if dist < keepout_radius:
                     return False
 
         return True
+
+    def is_area_explored(self, x, y, radius=50):
+        """Check if an area has been explored (rover trail passes nearby)"""
+        if not self.rover.trail or len(self.rover.trail) == 0:
+            return False
+
+        # Check if any trail point is within radius of the position
+        for trail_x, trail_y in self.rover.trail:
+            dist = math.sqrt((x - trail_x)**2 + (y - trail_y)**2)
+            if dist <= radius:
+                return True
+
+        return False
 
     def reset_game(self):
         """Reset game and regenerate realistic hazards"""
@@ -680,7 +725,7 @@ class Phase6Game(Phase5Game):
                     print("Battery depleted! Rover stopped.")
 
     def update_autopilot(self):
-        """Update autopilot movement toward waypoints"""
+        """Update autopilot movement toward waypoints with collision detection"""
         if not self.autopilot_path or self.autopilot_waypoint_index >= len(self.autopilot_path):
             self.cancel_autopilot()
             return
@@ -695,14 +740,64 @@ class Phase6Game(Phase5Game):
 
         # Check if reached waypoint
         if distance < 30:
+            # Perform GPR scan at waypoint if enabled
+            if self.autopilot_scan_at_waypoints and self.gpr_system.active:
+                print(f"Scanning waypoint {self.autopilot_waypoint_index + 1}/{len(self.autopilot_path)}...")
+                # GPR system automatically updates when active, just log it
+
             self.autopilot_waypoint_index += 1
+            self.autopilot_stuck_counter = 0  # Reset stuck counter
             if self.autopilot_waypoint_index >= len(self.autopilot_path):
-                print("Arrived at base!")
+                print("Arrived at destination!")
                 self.cancel_autopilot()
                 return
             return
 
-        # Steer toward waypoint
+        # Detect if rover is stuck (not making progress)
+        # Skip autopilot stuck detection if Phase 8 grid following is active
+        if self.autopilot_last_position and not getattr(self, 'grid_following', False):
+            last_x, last_y = self.autopilot_last_position
+            movement = math.sqrt((self.rover.x - last_x)**2 + (self.rover.y - last_y)**2)
+
+            # If moving less than 2 pixels per update, consider stuck
+            if movement < 2.0:
+                self.autopilot_stuck_counter += 1
+            else:
+                self.autopilot_stuck_counter = 0
+
+        self.autopilot_last_position = (self.rover.x, self.rover.y)
+
+        # If stuck for 15 frames (~0.25 seconds), backup and recalculate (faster response)
+        if self.autopilot_stuck_counter > 15 and not self.autopilot_backing_up and not getattr(self, 'grid_following', False):
+            print("Autopilot stuck on obstacle! Backing up...")
+            self.autopilot_backing_up = True
+            self.backup_distance = 0
+
+        # Handle backing up
+        if self.autopilot_backing_up:
+            # Back up in reverse direction at full speed (safe since moving away from obstacle)
+            backup_angle = self.rover.angle + 180
+            self.rover.angle = backup_angle % 360
+            self.rover.speed = min(self.rover.speed + 0.2, self.rover.max_speed)  # Full speed backup
+            self.backup_distance += abs(self.rover.speed)
+
+            # Backup for about 5 meters (500 pixels, assuming ~100 pixels = 1 meter scale)
+            if self.backup_distance > 500:
+                print("Backup complete! Recalculating path...")
+                self.autopilot_backing_up = False
+                self.backup_distance = 0
+                self.autopilot_stuck_counter = 0
+
+                # Recalculate path from current position
+                if self.autopilot_waypoint_index < len(self.autopilot_path):
+                    new_path = self.calculate_path_to_base()
+                    if new_path:
+                        self.autopilot_path = new_path
+                        self.autopilot_waypoint_index = 0
+                        print(f"New path calculated with {len(new_path)} waypoints")
+            return
+
+        # Normal autopilot behavior - steer toward waypoint
         target_angle = math.degrees(math.atan2(dy, dx))
         current_angle = self.rover.angle % 360
         target_angle = target_angle % 360
@@ -800,13 +895,20 @@ class Phase6Game(Phase5Game):
         # Draw artifact display (fixed UI, on top of everything)
         self.draw_artifact_display()
 
-        # Draw Phase 6 UI (fixed)
-        self.draw_phase6_ui()
+        # Draw Phase 6 status panel (top left)
+        self.draw_status_panel_ui()
 
         # Draw battery indicator
         self.draw_battery_indicator()
 
+        # Draw bottom controls panel (can be overridden by child classes)
+        self.draw_bottom_controls_panel()
+
         # Update display
+        self.display_update()
+
+    def display_update(self):
+        """Update the display - separate from draw to allow child classes to add more rendering"""
         pygame.display.flip()
 
     def draw_keepout_zones_camera(self):
@@ -1216,8 +1318,8 @@ class Phase6Game(Phase5Game):
                 True, (100, 255, 100))
             self.screen.blit(coords_text, (panel_x + 10, panel_y + 55))
 
-    def draw_phase6_ui(self):
-        """Draw Phase 6 specific UI elements"""
+    def draw_status_panel_ui(self):
+        """Draw status panel in top left"""
         # Draw ROVER STATUS panel in top left
         panel_width, panel_height = 350, 240
         panel_rect = pygame.Rect(20, 20, panel_width, panel_height)
@@ -1238,8 +1340,19 @@ class Phase6Game(Phase5Game):
         total_artifacts = len(self.artifacts)
         excavated_sites = sum(1 for s in self.dig_sites if s.excavated)
 
-        collision_status = "⚠️ COLLISION!" if self.rover.collision_warning else "✓ Clear"
-        collision_color = (255, 100, 100) if self.rover.collision_warning else (100, 255, 100)
+        # Use grid collision state in Phase 8, otherwise use rover collision_warning
+        if hasattr(self, 'grid_collision_state') and self.grid_collision_state:
+            collision_status = f"🔙 BACKING UP ({self.grid_collision_state.replace('_', ' ').upper()})"
+            collision_color = (255, 200, 0)  # Orange during backup
+        elif hasattr(self, 'grid_collision_cooldown') and self.grid_collision_cooldown > 0:
+            collision_status = f"✓ Clear (cooldown: {self.grid_collision_cooldown//60}s)"
+            collision_color = (100, 200, 255)  # Light blue during cooldown
+        elif self.rover.collision_warning:
+            collision_status = "⚠️ COLLISION!"
+            collision_color = (255, 100, 100)
+        else:
+            collision_status = "✓ Clear"
+            collision_color = (100, 255, 100)
 
         # Calculate distance from base
         distance_from_base = math.sqrt((self.rover.x - self.base_x)**2 + (self.rover.y - self.base_y)**2)
@@ -1289,6 +1402,8 @@ class Phase6Game(Phase5Game):
         text_rect = button_text.get_rect(center=button_rect.center)
         self.screen.blit(button_text, text_rect)
 
+    def draw_bottom_controls_panel(self):
+        """Draw bottom controls panel - can be overridden by child classes"""
         # Enhanced controls panel at bottom
         ui_panel = pygame.Rect(20, self.height - 160, self.width - 40, 140)
         pygame.draw.rect(self.screen, (20, 30, 40), ui_panel, border_radius=15)

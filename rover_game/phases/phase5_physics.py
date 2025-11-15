@@ -22,7 +22,7 @@ class PhysicsRover:
         self.y = y
         self.angle = 0  # Facing direction in degrees
         self.speed = 0
-        self.max_speed = 3
+        self.max_speed = 5  # Increased from 3 for faster navigation
         self.rotation_speed = 2.5
         self.width = 40
         self.height = 25
